@@ -58,8 +58,8 @@
                   <div class="col-sm-2">
                     <div class="input-group input-group-sm">
                       <div data-min-view="2" data-date-format="dd/mm/yyyy" class="input-group date datetimepicker">
-                        <input size="16" type="text" value="" class="form-control" placeholder="Từ ngày"><span class="input-group-addon btn btn-primary"><i
-                            class="icon-th mdi mdi-calendar"></i></span>
+                        <input id="in-from-day" size="16" type="text" value="" class="form-control" placeholder="Từ ngày"><span
+                          class="input-group-addon btn btn-primary"><i class="icon-th mdi mdi-calendar"></i></span>
                       </div>
                     </div>
                   </div>
@@ -67,8 +67,8 @@
                   <div class="col-sm-2">
                     <div class="input-group input-group-sm">
                       <div data-min-view="2" data-date-format="dd/mm/yyyy" class="input-group date datetimepicker">
-                        <input size="16" type="text" value="" class="form-control" placeholder="Đến ngày"><span class="input-group-addon btn btn-primary"><i
-                            class="icon-th mdi mdi-calendar"></i></span>
+                        <input id="in-to-day" size="16" type="text" value="" class="form-control" placeholder="Đến ngày"><span
+                          class="input-group-addon btn btn-primary"><i class="icon-th mdi mdi-calendar"></i></span>
                       </div>
                     </div>
                   </div>
@@ -78,8 +78,9 @@
                   </div>
 
                   <div class="col-sm-2">
-                    <button class="btn btn-primary hover" style="margin-top: 5px; height: 38px; width: 100%;"><i class="icon icon-left mdi mdi-cloud-download"></i>
-                      Áp dụng</button>
+                    <button id="btn-update" class="btn btn-primary hover" style="margin-top: 5px; height: 38px; width: 100%;"><i
+                        class="icon icon-left mdi mdi-cloud-download"></i>
+                      Cập nhật</button>
                   </div>
 
                 </div>
@@ -121,9 +122,10 @@
       let database = "vsyscali1";
       let collection = "trash";
       let limit = "50";
+      let query = "";
 
       let mlab = function () {
-        return `https://api.mlab.com/api/1/databases/${database}/collections/${collection}?apiKey=${api}&l=${limit}`;
+        return `https://api.mlab.com/api/1/databases/${database}/collections/${collection}?apiKey=${api}&l=${limit}&q=${query}`;
       };
 
       function convertDate(datetime) {
@@ -171,7 +173,7 @@
       $("#in-limit").keydown((e) => {
         if (e.keyCode == 13) {
           limit = $("#in-limit").val();
-          console.log(limit);
+          //console.log(limit);
           if (!isNaN(limit)) {
             tb.fnClearTable();
             getData();
@@ -185,16 +187,42 @@
       $("#in-page-length").keydown((e) => {
         if (e.keyCode == 13) {
           limit = $("#in-page-length").val();
-          if (!isNaN(limit)) {
+          let a = $("#table-mlab").DataTable();
+
+          if (limit == "") {
+            a.page.len(-1).draw();
+          }
+          else if (!isNaN(limit)) {
             let p = Number.parseInt(limit);
-            //console.log(p);
-            let a = $("#table-mlab").DataTable();
             a.page.len(p).draw();
           }
           else {
             alert("Số trang phải là số");
           }
         }
+      });
+
+      $("#btn-update").click(() => {
+        const regex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+        const subst = `$3-$2-$1`;
+        let dayFrom = $("#in-from-day").val().replace(regex, subst);
+        let dayTo = $("#in-to-day").val().replace(regex, subst);
+
+        limit = $("#in-limit").val();
+
+        if (dayFrom != "" && dayTo != "") {
+          query = `{"t":{"$gt":{"$date":"${dayFrom}T00:00:00.000Z"},"$lt":{"$date":"${dayTo}T00:00:00.000Z"}}}`;
+        }
+        else if (dayFrom == "") {
+          query = `{"t":{"$lt":{"$date":"${dayTo}T00:00:00.000Z"}}}`;
+        }
+        else {
+          query = `{"t":{"$gt":{"$date":"${dayFrom}T00:00:00.000Z"}}}`;
+        }
+        console.log(query);
+
+        tb.fnClearTable();
+        getData();
       });
 
     });
