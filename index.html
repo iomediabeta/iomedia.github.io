@@ -211,10 +211,10 @@
         limit = $("#in-limit").val();
 
         if (dayFrom != "" && dayTo != "") {
-          query = `{"t":{"$gt":{"$date":"${dayFrom}T00:00:00.000Z"},"$lt":{"$date":"${dayTo}T00:00:00.000Z"}}}`;
+          query = `{"t":{"$gt":{"$date":"${dayFrom}T00:00:00.000Z"},"$lt":{"$date":"${dayTo}T23:59:00.000Z"}}}`;
         }
         else if (dayFrom == "") {
-          query = `{"t":{"$lt":{"$date":"${dayTo}T00:00:00.000Z"}}}`;
+          query = `{"t":{"$lt":{"$date":"${dayTo}T23:59:00.000Z"}}}`;
         }
         else {
           query = `{"t":{"$gt":{"$date":"${dayFrom}T00:00:00.000Z"}}}`;
