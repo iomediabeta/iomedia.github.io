@@ -9648,7 +9648,6 @@ canvas {
 }
 .tab-chat .chat-window .title .user {
   display: inline-block;
-  float: right;
   text-align: right;
   line-height: 13px;
 }
@@ -10593,7 +10592,7 @@ canvas {
   margin-right: 2px;
 }
 .chart-pie-counter {
-  diplay: block;
+  display: block;
   position: absolute;
   top: 50%;
   width: 100%;
@@ -11329,7 +11328,6 @@ li.L9 {
   display: block;
   border-radius: 50px;
   overflow: hidden;
-  vertical-align: middle;
   float: left;
 }
 .timeline-avatar img {
