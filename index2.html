@@ -16,7 +16,6 @@
   <link rel="stylesheet" type="text/css" href="assets/lib/datetimepicker/css/bootstrap-datetimepicker.min.css" />
   <link rel="stylesheet" type="text/css" href="assets/lib/datatable2/css/dataTables.bootstrap.min.css" />
   <link rel="stylesheet" href="assets/css/style.css" type="text/css" />
-  <link rel="stylesheet" href="assets/lib/jquery-loading/jquery.loading.min.css" type="text/css" />
 </head>
 
 <body>
@@ -45,6 +44,13 @@
                 <div class="row dropdown-showcase" style="padding: 0 5px">
                   <div class="col-sm-2">
                     <div class="input-group input-group-sm" style="margin-top: 5px">
+                      <span class="input-group-addon">Giới hạn</span>
+                      <input id="in-limit" type="text" class="form-control" value="50">
+                    </div>
+                  </div>
+
+                  <div class="col-sm-2">
+                    <div class="input-group input-group-sm" style="margin-top: 5px">
                       <span class="input-group-addon">Số dòng</span>
                       <input id="in-page-length" type="text" class="form-control" value="8">
                     </div>
@@ -68,20 +74,27 @@
                     </div>
                   </div>
 
-                  <div class="col-sm-4">
+                  <div class="col-sm-2">
                     <input id="" type="text" class="form-control" style="margin-top: 5px" placeholder="Lọc">
                   </div>
 
                   <div class="col-sm-2">
                     <button id="btn-update" class="btn btn-primary hover" style="margin-top: 5px; height: 38px; width: 100%;"><i
                         class="icon icon-left mdi mdi-cloud-download"></i>
-                      Làm mới</button>
+                      Cập nhật</button>
                   </div>
 
                 </div>
                 <table id="table-mlab" class="table table-striped table-hover table-fw-widget">
                   <thead>
                     <tr>
+                      <th>Bộ IO</th>
+                      <th>Thời gian</th>
+                      <th>Cột 1</th>
+                      <th>Cột 2</th>
+                      <th>Cột 3</th>
+                      <th>Cột 4</th>
+                      <th>Cột 5</th>
                     </tr>
                   </thead>
                   <tbody id="mlab-row">
@@ -102,7 +115,6 @@
   <script src="assets/lib/datatable2/js/jquery.dataTables.min.js" type="text/javascript"></script>
   <script src="assets/lib/datatable2/js/dataTables.bootstrap.min.js" type="text/javascript"></script>
   <script src="assets/lib/datetimepicker/js/bootstrap-datetimepicker.min.js" type="text/javascript"></script>
-  <script src="assets/lib/jquery-loading/jquery.loading.min.js" type="text/javascript"></script>
   <script src="assets/js/app-tables-datatables.js" type="text/javascript"></script>
   <script type="text/javascript">
     $(document).ready(function () {
@@ -110,11 +122,8 @@
       let api = "rT_GFFPSlEq7vFifcx-4KOJvOuH2W_nO";
       let database = "vsyscali1";
       let collection = "trash";
-      let limit = "100";
-      let timeOut = 5;
-      let refresh = 60;
+      let limit = "50";
       let query = "";
-      let colnum = ["Bộ IO", "Thời gian", "Cột 1", "Cột 2", "Cột 3", "Cột 4", "Cột 5"];
 
       let mlab = function () {
         return `https://api.mlab.com/api/1/databases/${database}/collections/${collection}?apiKey=${api}&l=${limit}&q=${query}`;
@@ -126,25 +135,16 @@
         return datetime != "" ? datetime.replace(regex, subst) : datetime;
       }
 
-      function initColumn(col) {
-        col.forEach(c => {
-          $("#table-mlab > thead tr").append(`<th>${c}</th>`);
-        });
-      }
-
       function getData() {
-        $("#table-mlab").loading();
         $.ajax({
           url: mlab(),
           success: function (data) {
-            console.log("Data Success");
-            $("#table-mlab").loading('toggle');
-            tb.fnClearTable();
+            console.log("Data OK");
             data.forEach(d => {
               tb.fnAddData([d.id, convertDate(d.t.$date), d.c1, d.c2, d.c3, d.c4, d.c5]);
             });
           },
-          timeout: timeOut * 1000,
+          timeout: 5000,
           error: function (request, status, err) {
             if (status == "timeout") console.log("Timeout");
             else console.log("error: " + request + status + err);
@@ -152,18 +152,9 @@
         });
       }
 
-      initColumn(colnum);
-
       var tb = $("#table-mlab").dataTable({
         pageLength: 8,
         dom: "<'row be-datatable-body'<'col-sm-12'tr>>" +
-          "<'row be-datatable-footer'<'col-sm-5'i><'col-sm-7'p>>"
-      });
-
-      $.extend(true, $.fn.dataTable.defaults, {
-        dom:
-          "<'row be-datatable-header'<'col-sm-6'l><'col-sm-6'f>>" +
-          "<'row be-datatable-body'<'col-sm-12'tr>>" +
           "<'row be-datatable-footer'<'col-sm-5'i><'col-sm-7'p>>"
       });
 
@@ -177,17 +168,30 @@
       });
 
       $.get(mlab(), (data) => {
+        $.extend(true, $.fn.dataTable.defaults, {
+          dom:
+            "<'row be-datatable-header'<'col-sm-6'l><'col-sm-6'f>>" +
+            "<'row be-datatable-body'<'col-sm-12'tr>>" +
+            "<'row be-datatable-footer'<'col-sm-5'i><'col-sm-7'p>>"
+        });
+
         data.forEach(d => {
           tb.fnAddData([d.id, convertDate(d.t.$date), d.c1, d.c2, d.c3, d.c4, d.c5]);
         });
       });
 
-      var interval = setInterval(function () {
-        if (true) getData();
-        else {
-          clearInterval(interval);
+      $("#in-limit").keydown((e) => {
+        if (e.keyCode == 13) {
+          limit = $("#in-limit").val();
+          if (!isNaN(limit)) {
+            tb.fnClearTable();
+            getData();
+          }
+          else {
+            alert("Giới hạn phải là số");
+          }
         }
-      }, refresh * 1000);
+      });
 
       $("#in-page-length").keydown((e) => {
         if (e.keyCode == 13) {
@@ -218,37 +222,15 @@
         if (dayFrom != "" && dayTo != "") {
           query = `{"t":{"$gt":{"$date":"${dayFrom}T00:00:00.000Z"},"$lt":{"$date":"${dayTo}T23:59:00.000Z"}}}`;
         }
-        else if (dayFrom != "") {
-          query = `{"t":{"$gt":{"$date":"${dayFrom}T00:00:00.000Z"}}}`;
-        }
-        else if (dayTo != "") {
+        else if (dayFrom == "") {
           query = `{"t":{"$lt":{"$date":"${dayTo}T23:59:00.000Z"}}}`;
         }
-        else query = "";
-
+        else {
+          query = `{"t":{"$gt":{"$date":"${dayFrom}T00:00:00.000Z"}}}`;
+        }
         console.log(query);
-        getData();
-      });
 
-      $('#refresh-time').on('keypress', function (evt) {
-        var charCode = (evt.which) ? evt.which : event.keyCode;
-        return !(charCode != 46 && charCode > 31 && (charCode < 48 || charCode > 57));
-      });
-
-      $('#in-limit').on('keypress', function (evt) {
-        var charCode = (evt.which) ? evt.which : event.keyCode;
-        return !(charCode != 46 && charCode > 31 && (charCode < 48 || charCode > 57));
-      });
-
-      $('#request-timeout').on('keypress', function (evt) {
-        var charCode = (evt.which) ? evt.which : event.keyCode;
-        return !(charCode != 46 && charCode > 31 && (charCode < 48 || charCode > 57));
-      });
-
-      $("#btn-save-settings").click(() => {
-        refresh = $("#refresh-time").val() == "" ? refresh : Number.parseInt($("#refresh-time").val());
-        limit = $("#in-limit").val() == "" ? limit : Number.parseInt($("#in-limit").val());
-        timeOut = $("#request-timeout").val() == "" ? timeOut : Number.parseInt($("#request-timeout").val());
+        tb.fnClearTable();
         getData();
       });
 
@@ -265,51 +247,23 @@
           <div class="text-center">
             <div class="text-primary"><span class="modal-main-icon mdi mdi-settings"></span></div>
             <h3>Cài đặt</h3>
-            <div>
-              <table>
-                <tr>
-                  <div class="col-sm-6">
-                    <div class="input-group input-group-sm" style="margin-top: 5px">
-                      <span class="input-group-addon">Thời gian làm mới</span>
-                      <input id="refresh-time" type="text" class="form-control" value="10">
-                    </div>
-                  </div>
-                </tr>
-                <tr>
-                  <div class="col-sm-6">
-                    <div class="input-group input-group-sm" style="margin-top: 5px">
-                      <span class="input-group-addon">Giới hạn entries</span>
-                      <input id="in-limit" type="text" class="form-control" value="100">
-                    </div>
-                  </div>
-                </tr>
-                <tr>
-                  <div class="col-sm-6">
-                    <div class="input-group input-group-sm" style="margin-top: 5px">
-                      <span class="input-group-addon">Thời gian timeout</span>
-                      <input id="request-timeout" type="text" class="form-control" value="5">
-                    </div>
-                  </div>
-                </tr>
-                <tr>
-                  <div class="col-sm-6">
-                    <div class="input-group input-group-sm" style="margin-top: 5px">
-                      <span class="input-group-addon">Cài đặt khác</span>
-                      <input id="" type="text" class="form-control">
-                    </div>
-                  </div>
-                </tr>
-              </table>
-            </div>
-            <div style="margin-top: 100px">
+            <table>
+              <tr>
+                <td>Thời gian timeout:</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>Số lượng limit mặc định:</td>
+                <td></td>
+              </tr>
+            </table>
+            <div class="xs-mt-50">
               <button type="button" data-dismiss="modal" class="btn btn-space btn-default">Hủy</button>
-              <button id="btn-save-settings" type="button" data-dismiss="modal" class="btn btn-space btn-primary">Lưu</button>
+              <button type="button" data-dismiss="modal" class="btn btn-space btn-primary">Lưu</button>
             </div>
           </div>
         </div>
-        <div class="modal-footer">
-
-        </div>
+        <div class="modal-footer"></div>
       </div>
     </div>
   </div>
