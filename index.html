@@ -6,6 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>Github Page</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="shortcut icon" href="assets/img/logo-fav.png">
   <link rel="stylesheet" type="text/css" href="assets/lib/perfect-scrollbar/css/perfect-scrollbar.min.css" />
   <link rel="stylesheet" type="text/css" href="assets/lib/material-design-icons/css/material-design-iconic-font.min.css" />
   <!--[if lt IE 9]>
@@ -136,6 +137,7 @@
 
       function getData() {
         $.get(mlab(), (data) => {
+          console.log("Data OK");
           data.forEach(d => {
             tb.fnAddData([d.id, convertDate(d.t.$date), d.c1, d.c2, d.c3, d.c4, d.c5]);
           });
@@ -173,7 +175,6 @@
       $("#in-limit").keydown((e) => {
         if (e.keyCode == 13) {
           limit = $("#in-limit").val();
-          //console.log(limit);
           if (!isNaN(limit)) {
             tb.fnClearTable();
             getData();
